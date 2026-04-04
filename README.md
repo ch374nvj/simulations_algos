@@ -1,6 +1,6 @@
-# Simulations!
+# Simulations and Algorithms!
 
-A collection of simulations built using signal processing techniques in Python & MATLAB.
+A collection of simulations and algorithms built in Python & MATLAB.
 
 ## 📦 Installation
 
@@ -15,4 +15,4 @@ cd simulations
 pip install -r requirements.txt
 ```
 ## 🛠 Usage
-The simulation files are written in jupyter notebooks, so they can be open normally and executed straight away.
+Some of the simulation files are written in jupyter notebooks, so they can be open normally and executed straight away.
