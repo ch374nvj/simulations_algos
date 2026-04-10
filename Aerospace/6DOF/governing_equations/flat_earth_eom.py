@@ -28,7 +28,7 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict) -> np.ndarray:
     Returns:
         ndarray: dx - Time derivative of each state in x
     """
-    dx = np.array((12,1))
+    dx = np.zeros(12)
 
     # Assign current state vols to variables 
     u_b_mps   = x[0]  
@@ -85,24 +85,34 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict) -> np.ndarray:
     dx[2] = (1 / m_kg) * Fz_b_kgmps2 - gz_b_mps2 + v_b_mps * p_b_rps + u_b_mps * q_b_rps
 
     # Rotational Eqs
-    Den = Jxx_b_kgm2 * Jzz_b_kgm2 - Jxz_b_kgm2^2
+    Den = Jxx_b_kgm2 * Jzz_b_kgm2 - Jxz_b_kgm2**2.0
     
     # State: p_b_rps
-    dx[3] = (Jxz_b_kgm2(Jxx_b_kgm2 - Jyy_b_kgm2) * p_b_rps * q_b_rps \
-        - (Jzz_b_kgm2(Jzz_b_kgm2 - Jyy_b_kgm2) + Jxz_b_kgm2^2) * q_b_rps * r_b_rps \
+    dx[3] = (Jxz_b_kgm2*(Jxx_b_kgm2 - Jyy_b_kgm2) * p_b_rps * q_b_rps \
+        - (Jzz_b_kgm2*(Jzz_b_kgm2 - Jyy_b_kgm2) + Jxz_b_kgm2**2.0) * q_b_rps * r_b_rps \
         + Jzz_b_kgm2 * l_b_kgm2ps2 + Jxz_b_kgm2 * n_b_kgm2ps2) / Den
     
     # State: q_b_rps
     dx[4] = ((Jzz_b_kgm2 - Jxx_b_kgm2) * r_b_rps * p_b_rps - Jxz_b_kgm2 \
-        * (p_b_rps^2 - r_b_rps^2) * m_b_kgm2ps2) / Jyy_b_kgm2
+        * (p_b_rps**2.0 - r_b_rps**2.0) * m_b_kgm2ps2) / Jyy_b_kgm2
 
     # State: r_b_rps
     dx[5] = (-Jxz_b_kgm2 * (Jxx_b_kgm2 - Jyy_b_kgm2 + Jzz_b_kgm2 ) * q_b_rps * r_b_rps \
-        + (Jxx_b_kgm2 * (Jxx_b_kgm2 - Jyy_b_kgm2) + Jxz_b_kgm2^2) * p_b_rps * q_b_rps \
+        + (Jxx_b_kgm2 * (Jxx_b_kgm2 - Jyy_b_kgm2) + Jxz_b_kgm2**2.0) * p_b_rps * q_b_rps \
         + Jxz_b_kgm2 * l_b_kgm2ps2 + Jxx_b_kgm2 * n_b_kgm2ps2) / Den
 
     # Kinematic Eqs
+    rot_matrix = np.array([[1, math.sin(phi_rad)*math.tan(theta_rad), math.cos(phi_rad)*math.tan(theta_rad)],
+                           [0, math.cos(phi_rad), -math.sin(phi_rad)],
+                           [0, math.sin(phi_rad)/math.cos(theta_rad), math.cos(phi_rad)/math.cos(theta_rad)]])
+
+    pqr = np.array([p_b_rps, q_b_rps, r_b_rps]).reshape(-1,1)
+
+    mat_mul = rot_matrix @ pqr
+
+    dx[6:9] = mat_mul.flatten().tolist()
 
     # Position Eqs
+    dx[9:] = [0,0,0]
 
     return dx
