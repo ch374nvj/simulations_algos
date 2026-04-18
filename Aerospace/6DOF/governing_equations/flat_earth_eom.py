@@ -1,7 +1,8 @@
 import math
 import numpy as np
+from tools.Interpolators import interp
 
-def flat_earth_eom(t: float, x: np.ndarray, amod: dict) -> np.ndarray:
+def flat_earth_eom(t: float, x: np.ndarray, amod: dict, vmod: dict) -> np.ndarray:
     """flat_earth_eom.py is a function containing essential elements of a 6DOF 
     simulation. The purpose of this function is to allow the numerical approximation
     of solutions of the governing equations for an aircraft.
@@ -23,7 +24,8 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict) -> np.ndarray:
             x[9] : p1_n_m,    x-axis position of aircraft resolved in NED CS
             x[10]: p2_n_m,    y-axis ^^
             x[11]: p3_n_m,    z-axis ^^
-        amod (dict): Aircraft model stored in dict
+        amod (dict): atmospheric model stored in dict
+        vmod (dict): Vehicle (aircraft) model stored in dict
 
     Returns:
         ndarray: dx - Time derivative of each state in x
@@ -45,29 +47,78 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict) -> np.ndarray:
     p3_n_m    = x[11]
 
     # Get mass and MI 
-    m_kg = amod['m_kg']
-    Jxz_b_kgm2 = amod['Jxz_b_kgm2']
-    Jxx_b_kgm2 = amod['Jxx_b_kgm2']
-    Jyy_b_kgm2 = amod['Jyy_b_kgm2']
-    Jzz_b_kgm2 = amod['Jzz_b_kgm2']
+    m_kg = vmod['m_kg']
+    Jxz_b_kgm2 = vmod['Jxz_b_kgm2']
+    Jxx_b_kgm2 = vmod['Jxx_b_kgm2']
+    Jyy_b_kgm2 = vmod['Jyy_b_kgm2']
+    Jzz_b_kgm2 = vmod['Jzz_b_kgm2']
+
+    # Euler angles trignometry pre-calc
+    s_phi   = math.sin(phi_rad)
+    c_phi   = math.cos(phi_rad)
+    s_theta = math.sin(theta_rad)
+    c_theta = math.cos(theta_rad)
+    t_theta = math.tan(theta_rad)
+    s_psi   = math.sin(psi_rad)
+    c_psi   = math.cos(psi_rad)
+    
+    # current altitude
+    h_m = -p3_n_m
+    
+    # Atmosphere model
+    rho_interp_kgpm3 = interp(amod['alt_m'], amod['rho_kgpm3'], h_m)
+    # rho_interp_kgpm3 = 1.2
+    c_interp_mps = interp(amod['alt_m'], amod['c_mps'], h_m)
 
     # Air data calc
+    TAS_mps = math.sqrt(u_b_mps**2 + v_b_mps**2 + w_b_mps**2)
+    qbar_kgpm2 = 0.5*rho_interp_kgpm3*TAS_mps**2
 
-    # Atmosphere model
+    if w_b_mps == 0 and u_b_mps == 0:
+        w_over_u = 0
+    else:
+        w_over_u = w_b_mps/u_b_mps
+    alpha_rad = math.atan(w_over_u)
+
+    if v_b_mps == 0 and TAS_mps == 0:
+        v_over_VT = 0
+    else:
+        v_over_VT = v_b_mps/TAS_mps
+    beta_rad = math.asin(v_over_VT)
+
+    s_alpha = math.sin(alpha_rad)
+    c_alpha = math.cos(alpha_rad)
+    s_beta  = math.sin(beta_rad)
+    c_beta  = math.cos(beta_rad)
 
     # Gravity normal to earth tangent
-    gz_n_mps2 = 9.81
+    # gz_n_mps2 = 9.81
+    gz_n_mps2 = interp(amod['alt_m'], amod['g_mps2'], h_m)
 
     # Resolve gravity in body frame
-    gx_b_mps2 = -math.sin(theta_rad) * gz_n_mps2
-    gy_b_mps2 = math.sin(phi_rad) * math.cos(theta_rad) * gz_n_mps2
-    gz_b_mps2 = math.cos(phi_rad) * math.cos(theta_rad) * gz_n_mps2
+    gx_b_mps2 = -s_theta * gz_n_mps2
+    gy_b_mps2 = s_phi * c_theta * gz_n_mps2
+    gz_b_mps2 = c_phi * c_theta * gz_n_mps2
+
+    # Aerodynamic forces
+    drag_kgmps2 = vmod['CD_approx']*qbar_kgpm2*vmod['Aref_m2']
+    side_kgmps2 = vmod['CY_approx']*qbar_kgpm2*vmod['Aref_m2']
+    lift_kgmps2 = vmod['CL_approx']*qbar_kgpm2*vmod['Aref_m2']
 
     # External Forces
-    Fx_b_kgmps2 = 0
-    Fy_b_kgmps2 = 0
-    Fz_b_kgmps2 = 0
+    # C_w/b
+    C_w_b = np.array([[ c_alpha*c_beta,s_beta, s_alpha*c_beta],
+                      [-c_alpha*s_beta,c_beta, s_alpha*s_beta],
+                      [-s_alpha       ,0     , c_alpha       ]])
     
+    # F^D_A
+    F_D_A = np.array([drag_kgmps2, side_kgmps2, lift_kgmps2]).reshape(-1,1)
+    # F^b_A
+    F_b_A = -C_w_b.T @ F_D_A
+
+    [Fx_b_kgmps2,
+    Fy_b_kgmps2,
+    Fz_b_kgmps2] = F_b_A.flatten().tolist()
 
     # External moments
     l_b_kgm2ps2 = 0
@@ -102,17 +153,28 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict) -> np.ndarray:
         + Jxz_b_kgm2 * l_b_kgm2ps2 + Jxx_b_kgm2 * n_b_kgm2ps2) / Den
 
     # Kinematic Eqs
-    rot_matrix = np.array([[1, math.sin(phi_rad)*math.tan(theta_rad), math.cos(phi_rad)*math.tan(theta_rad)],
-                           [0, math.cos(phi_rad), -math.sin(phi_rad)],
-                           [0, math.sin(phi_rad)/math.cos(theta_rad), math.cos(phi_rad)/math.cos(theta_rad)]])
+    # W: Euler angle rate mapping matrix
+    W = np.array([[1, s_phi*t_theta, c_phi*t_theta ],
+                  [0,      c_phi   , -s_phi        ],
+                  [0, s_phi/c_theta, c_phi/c_theta ]])
 
     pqr = np.array([p_b_rps, q_b_rps, r_b_rps]).reshape(-1,1)
 
-    mat_mul = rot_matrix @ pqr
+    # eul_dot: phi_dot, theta_dot, psi_dot
+    eul_dot = W @ pqr
 
-    dx[6:9] = mat_mul.flatten().tolist()
+    dx[6:9] = eul_dot.flatten().tolist()
 
     # Position Eqs
-    dx[9:] = [0,0,0]
+    # C_n/b
+    C_n_b = np.array([[c_theta*c_psi, (-c_phi*s_phi + s_phi*s_theta*c_psi), ( s_phi*s_psi + c_phi*s_theta*c_psi)],
+                      [c_phi*s_psi  , ( c_phi*c_psi + s_phi*s_theta*s_psi), (-s_phi*c_psi + c_phi*s_theta*s_psi)],
+                      [-s_theta     ,   s_phi*c_theta,                        c_phi*c_theta                     ]])
+
+    uvw_dot = np.array(dx[:3]).reshape(-1,1)
+
+    pos_dot = C_n_b @ uvw_dot 
+
+    dx[9:] = pos_dot.flatten().tolist()
 
     return dx

@@ -1,3 +1,7 @@
 *.asv
 *.slxc
 *.xml
+*.pyc
+*.log
+*.prof
+__pycache__/

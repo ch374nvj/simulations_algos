@@ -1,6 +1,6 @@
 import numpy as np
 
-def forward_euler(f, t_s, x, h_s, amod):
+def forward_euler(f, t_s, x, h_s, vmod, amod):
     """_summary_
 
     Forward Euler integrator to approximate solution of differential eqn
@@ -10,7 +10,8 @@ def forward_euler(f, t_s, x, h_s, amod):
         t_s (list) : vector of time points at which numerical solution will be approximated
         x   (list) : numerically approximated solns of f(x,t)
         h_s (float): step size in sec
-        amod(dict) : aircraft model
+        vmod(dict) : vehicle (aircraft) model
+        amod(dict) : atmosphere model
 
     Returns:
         t_s (list) : vector of time points at which numerical solution was be approximated
@@ -19,6 +20,6 @@ def forward_euler(f, t_s, x, h_s, amod):
     
     # Fwd Euler numerical integration
     for i in range(1, len(t_s)):
-        x[:, i] = x[:, i-1] + h_s * f(t_s[i-1], x[:, i-1], amod)
+        x[:, i] = x[:, i-1] + h_s * f(t_s[i-1], x[:, i-1], amod, vmod) 
 
     return t_s, x;
