@@ -129,11 +129,11 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict, vmod: dict) -> np.ndarra
     # Translational Eqs
 
     # State: u_b_mps
-    dx[0] = (1 / m_kg) * Fx_b_kgmps2 - gx_b_mps2 + w_b_mps * q_b_rps + v_b_mps * r_b_rps
+    dx[0] = (1 / m_kg) * Fx_b_kgmps2 + gx_b_mps2 - w_b_mps * q_b_rps + v_b_mps * r_b_rps
     # State: v_b_mps
-    dx[1] = (1 / m_kg) * Fy_b_kgmps2 - gy_b_mps2 + u_b_mps * r_b_rps + w_b_mps * p_b_rps
+    dx[1] = (1 / m_kg) * Fy_b_kgmps2 + gy_b_mps2 - u_b_mps * r_b_rps + w_b_mps * p_b_rps
     # State: w_b_mps
-    dx[2] = (1 / m_kg) * Fz_b_kgmps2 - gz_b_mps2 + v_b_mps * p_b_rps + u_b_mps * q_b_rps
+    dx[2] = (1 / m_kg) * Fz_b_kgmps2 + gz_b_mps2 - v_b_mps * p_b_rps + u_b_mps * q_b_rps
 
     # Rotational Eqs
     Den = Jxx_b_kgm2 * Jzz_b_kgm2 - Jxz_b_kgm2**2.0

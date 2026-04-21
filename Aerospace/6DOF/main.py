@@ -34,7 +34,9 @@ def main():
     }
 
     # vmod: vehicle model
-    vmod = spheres.BowlingBall()
+    vmod = spheres.Lead_50Calib()
+
+    print(f'Analytical terminal velo: {vmod["Vterm_mps"]:.2f} m/s')
 
     # Setting init conditions or trim conditions
     u0_b_mps   = 0.001  
@@ -48,7 +50,7 @@ def main():
     psi0_rad   = 0
     p10_n_m    = 0
     p20_n_m    = 0
-    p30_n_m    = -30000
+    p30_n_m    = -10000
 
     # Assignin' init condtions to the init state array
     x0 = np.array([
@@ -71,7 +73,7 @@ def main():
 
     # Set time conditions
     t0_s = 0.0
-    tf_s = 10.0
+    tf_s = 100.0
     h_s  = 0.01
 
     # ##########################################################
@@ -86,7 +88,9 @@ def main():
     # Assign init condition to soln array
     x[:, 0] = x0
 
-    t_s, x = numerical_integrator.forward_euler(flat_earth_eom.flat_earth_eom, t_s, x, h_s, vmod=vmod, amod=amod)
+    t_s, x, dx = numerical_integrator.forward_euler(flat_earth_eom.flat_earth_eom, t_s, x, h_s, vmod=vmod, amod=amod)
+
+    print(f'Simulated final velo: {x[0, -1]} m/s')
 
     # Data pre-alloc & post processing
 
@@ -135,11 +139,12 @@ def main():
     # ##########################################################
 
     # Subplots
-    fig, axes = plt.subplots(2, 4, figsize=(10,6))
+    fig, axes = plt.subplots(2, 4, figsize=(10,6), layout="constrained")
     fig.set_facecolor('black')
+    fig.suptitle("u, v, w, p, q, r, phi, theta", color="white")
 
     # x-axis velocity
-    axes[0,0].plot(t_s, x[0,:], label='u', color='yellow')
+    axes[0,0].plot(t_s, x[0,:], label='u', color='red')
     axes[0,0].set_xlabel('Time (sec)', color='white')
     axes[0,0].set_ylabel('u [m/s]', color='white')
     axes[0,0].grid(True)
@@ -147,7 +152,7 @@ def main():
     axes[0,0].tick_params(colors='white')
 
     # y-axis velocity
-    axes[0,1].plot(t_s, x[1,:], label='v', color='yellow')
+    axes[0,1].plot(t_s, x[1,:], label='v', color='red')
     axes[0,1].set_xlabel('Time (sec)', color='white')
     axes[0,1].set_ylabel('v [m/s]', color='white')
     axes[0,1].grid(True)
@@ -155,7 +160,7 @@ def main():
     axes[0,1].tick_params(colors='white')
 
     # z-axis velocity
-    axes[0,2].plot(t_s, x[2,:], label='w', color='yellow')
+    axes[0,2].plot(t_s, x[2,:], label='w', color='red')
     axes[0,2].set_xlabel('Time (sec)', color='white')
     axes[0,2].set_ylabel('w [m/s]', color='white')
     axes[0,2].grid(True)
@@ -163,7 +168,7 @@ def main():
     axes[0,2].tick_params(colors='white')
 
     # phi
-    axes[0,3].plot(t_s, x[6,:], label='phi', color='yellow')
+    axes[0,3].plot(t_s, x[6,:], label='phi', color='red')
     axes[0,3].set_xlabel('Time (sec)', color='white')
     axes[0,3].set_ylabel('phi [rad]', color='white')
     axes[0,3].grid(True)
@@ -171,7 +176,7 @@ def main():
     axes[0,3].tick_params(colors='white')
 
     # roll rate, p
-    axes[1,0].plot(t_s, x[3,:], label='p', color='yellow')
+    axes[1,0].plot(t_s, x[3,:], label='p', color='red')
     axes[1,0].set_xlabel('Time (sec)', color='white')
     axes[1,0].set_ylabel('p [r/s]', color='white')
     axes[1,0].grid(True)
@@ -179,7 +184,7 @@ def main():
     axes[1,0].tick_params(colors='white')
 
     # pitch rate, q
-    axes[1,1].plot(t_s, x[4,:], label='q', color='yellow')
+    axes[1,1].plot(t_s, x[4,:], label='q', color='red')
     axes[1,1].set_xlabel('Time (sec)', color='white')
     axes[1,1].set_ylabel('q [r/s]', color='white')
     axes[1,1].grid(True)
@@ -187,7 +192,7 @@ def main():
     axes[1,1].tick_params(colors='white')
 
     # yaw rate, r
-    axes[1,2].plot(t_s, x[5,:], label='r', color='yellow')
+    axes[1,2].plot(t_s, x[5,:], label='r', color='red')
     axes[1,2].set_xlabel('Time (sec)', color='white')
     axes[1,2].set_ylabel('r [r/s]', color='white')
     axes[1,2].grid(True)
@@ -195,16 +200,76 @@ def main():
     axes[1,2].tick_params(colors='white')
 
     # pitch, theta
-    axes[1,3].plot(t_s, x[7,:], label='theta', color='yellow')
+    axes[1,3].plot(t_s, x[7,:], label='theta', color='red')
     axes[1,3].set_xlabel('Time (sec)', color='white')
     axes[1,3].set_ylabel('theta [m/s]', color='white')
     axes[1,3].grid(True)
     axes[1,3].set_facecolor('black')
     axes[1,3].tick_params(colors='white')
 
-    plt.tight_layout()
-    plt.savefig('savefig/sphere_drop_test_1.png')
-    plt.show()
+    plt.savefig('savefig/sphere_drop_test_2.png')
+
+    fig2, axes2 = plt.subplots(1, 3, figsize=(10,6), layout="constrained")
+    fig2.set_label('XYZ')
+    fig2.set_facecolor('black')
+    fig2.suptitle('Position (x, y, z) [m]', color="white")
+
+    # X (p1)
+    axes2[0].plot(t_s, x[9,:], label='x', color='red')
+    axes2[0].set_xlabel('Time (sec)', color='white')
+    axes2[0].set_ylabel('x [m]', color='white')
+    axes2[0].grid(True)
+    axes2[0].set_facecolor('black')
+    axes2[0].tick_params(colors='white')
+
+    # Y (p2)
+    axes2[1].plot(t_s, x[10,:], label='y', color='red')
+    axes2[1].set_xlabel('Time (sec)', color='white')
+    axes2[1].set_ylabel('y [m]', color='white')
+    axes2[1].grid(True)
+    axes2[1].set_facecolor('black')
+    axes2[1].tick_params(colors='white')
+
+    # Z (p3)
+    axes2[2].plot(t_s, -x[11,:], label='z', color='red')
+    axes2[2].set_xlabel('Time (sec)', color='white')
+    axes2[2].set_ylabel('z [m]', color='white')
+    axes2[2].grid(True)
+    axes2[2].set_facecolor('black')
+    axes2[2].tick_params(colors='white')
+
+    plt.savefig('savefig/sphere_drop_test_2_xyz.png')
+    # plt.show()
+
+    fig3, axes3 = plt.subplots(1, 3, figsize=(10,6), layout="constrained")
+    fig3.set_facecolor('black')
+    fig3.suptitle('Body accelerations [m/s^2]', color="white")
+
+    # udot (m/s^2)
+    axes3[0].plot(t_s, dx[0,:], label='u_dot', color='red')
+    axes3[0].set_xlabel('Time (sec)', color='white')
+    axes3[0].set_ylabel('u_dot [m/s2]', color='white')
+    axes3[0].grid(True)
+    axes3[0].set_facecolor('black')
+    axes3[0].tick_params(colors='white')
+
+    # vdot (m/s^2)
+    axes3[1].plot(t_s, dx[1,:], label='v_dot', color='red')
+    axes3[1].set_xlabel('Time (sec)', color='white')
+    axes3[1].set_ylabel('v_dot [m/s2]', color='white')
+    axes3[1].grid(True)
+    axes3[1].set_facecolor('black')
+    axes3[1].tick_params(colors='white')
+
+    # wdot (m/s^2)
+    axes3[2].plot(t_s, -dx[2,:], label='w_dot', color='red')
+    axes3[2].set_xlabel('Time (sec)', color='white')
+    axes3[2].set_ylabel('w_dot [m/s2]', color='white')
+    axes3[2].grid(True)
+    axes3[2].set_facecolor('black')
+    axes3[2].tick_params(colors='white')
+
+    plt.savefig('savefig/sphere_drop_test_2_uvw_dot.png')
 
 if __name__ == "__main__":
     main()

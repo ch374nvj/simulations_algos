@@ -19,7 +19,10 @@ def forward_euler(f, t_s, x, h_s, vmod, amod):
     """
     
     # Fwd Euler numerical integration
-    for i in range(1, len(t_s)):
-        x[:, i] = x[:, i-1] + h_s * f(t_s[i-1], x[:, i-1], amod, vmod) 
+    dx = np.empty((12, len(t_s)), dtype=float)
 
-    return t_s, x;
+    for i in range(1, len(t_s)):
+        dx[:, i] = f(t_s[i-1], x[:, i-1], amod, vmod)
+        x[:, i]  = x[:, i-1] + h_s * dx[:, i] 
+
+    return t_s, x, dx
