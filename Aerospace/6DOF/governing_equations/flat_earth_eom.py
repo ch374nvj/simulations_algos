@@ -128,11 +128,11 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict, vmod: dict) -> np.ndarra
     # EOM
     # Translational Eqs
 
-    # State: u_b_mps
+    # State: udot_b_mps
     dx[0] = (1 / m_kg) * Fx_b_kgmps2 + gx_b_mps2 - w_b_mps * q_b_rps + v_b_mps * r_b_rps
-    # State: v_b_mps
+    # State: vdot_b_mps
     dx[1] = (1 / m_kg) * Fy_b_kgmps2 + gy_b_mps2 - u_b_mps * r_b_rps + w_b_mps * p_b_rps
-    # State: w_b_mps
+    # State: wdot_b_mps
     dx[2] = (1 / m_kg) * Fz_b_kgmps2 + gz_b_mps2 - v_b_mps * p_b_rps + u_b_mps * q_b_rps
 
     # Rotational Eqs
@@ -176,5 +176,8 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict, vmod: dict) -> np.ndarra
     pos_dot = C_n_b @ uvw_dot 
 
     dx[9:] = pos_dot.flatten().tolist()
+
+    if t%10 == 0:
+        print(t)
 
     return dx

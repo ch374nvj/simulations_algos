@@ -138,6 +138,9 @@ def main():
     # Part3: Plot Data
     # ##########################################################
 
+    simulation_test = 'sphere_drop_test_kinematic'
+    test_count = 1
+
     # Subplots
     fig, axes = plt.subplots(2, 4, figsize=(10,6), layout="constrained")
     fig.set_facecolor('black')
@@ -207,7 +210,7 @@ def main():
     axes[1,3].set_facecolor('black')
     axes[1,3].tick_params(colors='white')
 
-    plt.savefig('savefig/sphere_drop_test_2.png')
+    plt.savefig(f'savefig/{simulation_test}_{test_count}.png')
 
     fig2, axes2 = plt.subplots(1, 3, figsize=(10,6), layout="constrained")
     fig2.set_label('XYZ')
@@ -238,7 +241,7 @@ def main():
     axes2[2].set_facecolor('black')
     axes2[2].tick_params(colors='white')
 
-    plt.savefig('savefig/sphere_drop_test_2_xyz.png')
+    plt.savefig(f'savefig/{simulation_test}_{test_count}_xyz.png')
     # plt.show()
 
     fig3, axes3 = plt.subplots(1, 3, figsize=(10,6), layout="constrained")
@@ -269,7 +272,7 @@ def main():
     axes3[2].set_facecolor('black')
     axes3[2].tick_params(colors='white')
 
-    plt.savefig('savefig/sphere_drop_test_2_uvw_dot.png')
+    plt.savefig(f'savefig/{simulation_test}_{test_count}_uvw_dot.png')
 
 if __name__ == "__main__":
     main()
