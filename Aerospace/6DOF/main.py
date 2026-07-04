@@ -34,7 +34,8 @@ def main():
     }
 
     # vmod: vehicle model
-    vmod = spheres.Lead_50Calib()
+    vehicle = spheres.Lead_50Calib()
+    vmod = vehicle.vmod
 
     print(f'Analytical terminal velo: {vmod["Vterm_mps"]:.2f} m/s')
 
@@ -87,8 +88,8 @@ def main():
 
     # Assign init condition to soln array
     x[:, 0] = x0
-
-    t_s, x, dx = numerical_integrator.forward_euler(flat_earth_eom.flat_earth_eom, t_s, x, h_s, vmod=vmod, amod=amod)
+    u = [0,0,0,0]
+    t_s, x, dx = numerical_integrator.forward_euler(flat_earth_eom.flat_earth_eom, t_s, x, u, h_s, vmod=vmod, amod=amod)
 
     print(f'Simulated final velo: {x[0, -1]} m/s')
 

@@ -2,7 +2,7 @@ import math
 import numpy as np
 from tools.Interpolators import interp
 
-def flat_earth_eom(t: float, x: np.ndarray, amod: dict, vmod: dict) -> np.ndarray:
+def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod: dict) -> np.ndarray:
     """flat_earth_eom.py is a function containing essential elements of a 6DOF 
     simulation. The purpose of this function is to allow the numerical approximation
     of solutions of the governing equations for an aircraft.
@@ -16,14 +16,19 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict, vmod: dict) -> np.ndarra
             x[1] : v_b_mps,   lateral velocity  ^^
             x[2] : w_b_mps,   vertical velocity ^^
             x[3] : p_b_rps,   roll angular velocity (rate) of body fixed CS resolved in inertial CS
-            x[4] : q_b_rps,   pitch angular velocity (rate) ^^
-            x[5] : r_b_rps,   yaw angular velocity (rate)   ^^
+            x[4] : q_b_rps,   pitch angular velocity(rate) ^^
+            x[5] : r_b_rps,   yaw angular velocity  (rate) ^^
             x[6] : phi_rad,   roll angle
             x[7] : theta_rad, pitch angle
             x[8] : psi_rad,   yaw angle
             x[9] : p1_n_m,    x-axis position of aircraft resolved in NED CS
             x[10]: p2_n_m,    y-axis ^^
             x[11]: p3_n_m,    z-axis ^^
+        u (np.ndarray): control vector
+            u[0] : del_e_deg, Elevator (or right elevon) deflection
+            u[1] : del_a_deg, Aileron  (or left elevon)  deflection
+            u[2] : del_r_deg, Rudder   deflection
+            u[3] : del_Th,    Throttle
         amod (dict): atmospheric model stored in dict
         vmod (dict): Vehicle (aircraft) model stored in dict
 
@@ -99,6 +104,9 @@ def flat_earth_eom(t: float, x: np.ndarray, amod: dict, vmod: dict) -> np.ndarra
     gx_b_mps2 = -s_theta * gz_n_mps2
     gy_b_mps2 = s_phi * c_theta * gz_n_mps2
     gz_b_mps2 = c_phi * c_theta * gz_n_mps2
+
+    CD = vmod['CD_approx']
+
 
     # Aerodynamic forces
     drag_kgmps2 = vmod['CD_approx']*qbar_kgpm2*vmod['Aref_m2']

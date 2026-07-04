@@ -1,6 +1,6 @@
 import numpy as np
 
-def forward_euler(f, t_s, x, h_s, vmod, amod):
+def forward_euler(f, t_s, x, u, h_s, vmod, amod):
     """_summary_
 
     Forward Euler integrator to approximate solution of differential eqn
@@ -22,7 +22,10 @@ def forward_euler(f, t_s, x, h_s, vmod, amod):
     dx = np.empty((12, len(t_s)), dtype=float)
 
     for i in range(1, len(t_s)):
-        dx[:, i] = f(t_s[i-1], x[:, i-1], amod, vmod)
+        dx[:, i] = f(t_s[i-1], x[:, i-1], u, amod, vmod)
         x[:, i]  = x[:, i-1] + h_s * dx[:, i] 
 
     return t_s, x, dx
+
+def rk4(f, t_s, x, h_s, vmod, amod):
+    pass
