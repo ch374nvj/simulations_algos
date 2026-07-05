@@ -6,7 +6,8 @@ import numpy as np
 from governing_equations import flat_earth_eom
 from numerical_integrators import numerical_integrator
 from tools.Interpolators import interp
-from vehicle_models.sphere import spheres
+# from vehicle_models.sphere import spheres
+from vehicle_models.fixed_wing import AHV
 
 from tools.profutils import profile
 
@@ -34,10 +35,10 @@ def main():
     }
 
     # vmod: vehicle model
-    vehicle = spheres.Lead_50Calib()
-    vmod = vehicle.vmod
+    vmod = AHV.AHV_model()
+    vmod_dict = vmod.vmod
 
-    print(f'Analytical terminal velo: {vmod["Vterm_mps"]:.2f} m/s')
+    # print(f'Analytical terminal velo: {vmod_dict["Vterm_mps"]:.2f} m/s')
 
     # Setting init conditions or trim conditions
     u0_b_mps   = 0.001  

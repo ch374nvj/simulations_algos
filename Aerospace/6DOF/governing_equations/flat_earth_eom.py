@@ -2,7 +2,7 @@ import math
 import numpy as np
 from tools.Interpolators import interp
 
-def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod: dict) -> np.ndarray:
+def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod) -> np.ndarray:
     """flat_earth_eom.py is a function containing essential elements of a 6DOF 
     simulation. The purpose of this function is to allow the numerical approximation
     of solutions of the governing equations for an aircraft.
@@ -36,6 +36,7 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod: dic
         ndarray: dx - Time derivative of each state in x
     """
     dx = np.zeros(12)
+    u_deg = u*57.3
 
     # Assign current state vols to variables 
     u_b_mps   = x[0]  
@@ -84,12 +85,14 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod: dic
     else:
         w_over_u = w_b_mps/u_b_mps
     alpha_rad = math.atan(w_over_u)
+    alpha_deg = alpha_rad * 57.3
 
     if v_b_mps == 0 and TAS_mps == 0:
         v_over_VT = 0
     else:
         v_over_VT = v_b_mps/TAS_mps
     beta_rad = math.asin(v_over_VT)
+    beta_deg = beta_rad * 57.3
 
     s_alpha = math.sin(alpha_rad)
     c_alpha = math.cos(alpha_rad)
@@ -129,7 +132,7 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod: dic
     Fz_b_kgmps2] = F_b_A.flatten().tolist()
 
     # External moments
-    l_b_kgm2ps2 = 0
+    l_b_kgm2ps2 = vmod.Clm(alpha_deg, beta_deg, u_deg, TAS_mps, p_b_rps, r_b_rps)
     m_b_kgm2ps2 = 0
     n_b_kgm2ps2 = 0
 
