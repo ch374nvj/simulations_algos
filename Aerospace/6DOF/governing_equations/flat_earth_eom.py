@@ -25,9 +25,9 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod) -> 
             x[10]: p2_n_m,    y-axis ^^
             x[11]: p3_n_m,    z-axis ^^
         u (np.ndarray): control vector
-            u[0] : del_e_deg, Elevator (or right elevon) deflection
-            u[1] : del_a_deg, Aileron  (or left elevon)  deflection
-            u[2] : del_r_deg, Rudder   deflection
+            u[0] : del_e_rad, Elevator (or right elevon) deflection
+            u[1] : del_a_rad, Aileron  (or left elevon)  deflection
+            u[2] : del_r_rad, Rudder   deflection
             u[3] : del_Th,    Throttle
         amod (dict): atmospheric model stored in dict
         vmod (dict): Vehicle (aircraft) model stored in dict
@@ -36,7 +36,7 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod) -> 
         ndarray: dx - Time derivative of each state in x
     """
     dx = np.zeros(12)
-    u_deg = u*57.3
+    u_deg = u*[1,1,1,1/57.3]*57.3 #Multiplying only surfaces deflections by 57.3
 
     # Assign current state vols to variables 
     u_b_mps   = x[0]  
@@ -53,11 +53,11 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod) -> 
     p3_n_m    = x[11]
 
     # Get mass and MI 
-    m_kg = vmod['m_kg']
-    Jxz_b_kgm2 = vmod['Jxz_b_kgm2']
-    Jxx_b_kgm2 = vmod['Jxx_b_kgm2']
-    Jyy_b_kgm2 = vmod['Jyy_b_kgm2']
-    Jzz_b_kgm2 = vmod['Jzz_b_kgm2']
+    m_kg = vmod.m_kg
+    Jxz_b_kgm2 = vmod.Jxz_b_kgm2
+    Jxx_b_kgm2 = vmod.Jxx_b_kgm2
+    Jyy_b_kgm2 = vmod.Jyy_b_kgm2
+    Jzz_b_kgm2 = vmod.Jzz_b_kgm2
 
     # Euler angles trignometry pre-calc
     s_phi   = math.sin(phi_rad)
@@ -108,13 +108,14 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod) -> 
     gy_b_mps2 = s_phi * c_theta * gz_n_mps2
     gz_b_mps2 = c_phi * c_theta * gz_n_mps2
 
-    CD = vmod['CD_approx']
-
-
     # Aerodynamic forces
-    drag_kgmps2 = vmod['CD_approx']*qbar_kgpm2*vmod['Aref_m2']
-    side_kgmps2 = vmod['CY_approx']*qbar_kgpm2*vmod['Aref_m2']
-    lift_kgmps2 = vmod['CL_approx']*qbar_kgpm2*vmod['Aref_m2']
+    CD = vmod.CD(alpha_deg, u_deg)
+    CY = vmod.CY(beta_deg, u_deg)
+    CL = vmod.CL(alpha_deg, u_deg)
+
+    drag_kgmps2 = CD*qbar_kgpm2*vmod.Aref_m2
+    side_kgmps2 = CY*qbar_kgpm2*vmod.Aref_m2
+    lift_kgmps2 = CL*qbar_kgpm2*vmod.Aref_m2
 
     # External Forces
     # C_w/b
@@ -131,10 +132,16 @@ def flat_earth_eom(t: float, x: np.ndarray, u: np.ndarray, amod: dict, vmod) -> 
     Fy_b_kgmps2,
     Fz_b_kgmps2] = F_b_A.flatten().tolist()
 
+    Fx_b_kgmps2 += u[3]*vmod.T_max_N
+
     # External moments
-    l_b_kgm2ps2 = vmod.Clm(alpha_deg, beta_deg, u_deg, TAS_mps, p_b_rps, r_b_rps)
-    m_b_kgm2ps2 = 0
-    n_b_kgm2ps2 = 0
+    Clm = vmod.Clm(alpha_deg, beta_deg, u_deg, TAS_mps, p_b_rps, r_b_rps)
+    Cm = vmod.Cm(alpha_deg, u_deg, TAS_mps, q_b_rps)
+    Cn = vmod.Cn(alpha_deg, beta_deg, u_deg, TAS_mps, p_b_rps, r_b_rps)
+
+    l_b_kgm2ps2 = qbar_kgpm2*vmod.Aref_m2*vmod.b_m*Clm
+    m_b_kgm2ps2 = qbar_kgpm2*vmod.Aref_m2*vmod.c_m*Cm
+    n_b_kgm2ps2 = qbar_kgpm2*vmod.Aref_m2*vmod.b_m*Cn
 
     # EOM
     # Translational Eqs

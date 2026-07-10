@@ -43,6 +43,6 @@ def rk4(f, t_s, x, u, h_s, vmod, amod):
         y = yi + (h_s/6)*(k1 + 2*k2 + 2*k3 + k4)
         x[:, i] = y
 
-        dx[:,i] = k1 #unintegrated state rates
+        dx[:,i] = k1 #unintegrated dynamics
 
     return t_s, x, dx

@@ -48,7 +48,7 @@ def main():
     q0_b_rps   = 0
     r0_b_rps   = 0
     phi0_rad   = 0*math.pi/180
-    theta0_rad = -90*math.pi/180
+    theta0_rad = 0*math.pi/180
     psi0_rad   = 0
     p10_n_m    = 0
     p20_n_m    = 0
@@ -89,10 +89,10 @@ def main():
 
     # Assign init condition to soln array
     x[:, 0] = x0
-    u = [0,0,0,0]
-    t_s, x, dx = numerical_integrator.forward_euler(flat_earth_eom.flat_earth_eom, t_s, x, u, h_s, vmod=vmod, amod=amod)
+    u = np.array([0.5,-0.5,0,0.25])
+    t_s, x, dx = numerical_integrator.rk4(flat_earth_eom.flat_earth_eom, t_s, x, u, h_s, vmod=vmod, amod=amod)
 
-    print(f'Simulated final velo: {x[0, -1]} m/s')
+    # print(f'Simulated final velo: {x[0, -1]} m/s')
 
     # Data pre-alloc & post processing
 
@@ -140,7 +140,7 @@ def main():
     # Part3: Plot Data
     # ##########################################################
 
-    simulation_test = 'sphere_drop_test_kinematic'
+    simulation_test = 'ahv_test_roll'
     test_count = 1
 
     # Subplots
@@ -207,7 +207,7 @@ def main():
     # pitch, theta
     axes[1,3].plot(t_s, x[7,:], label='theta', color='red')
     axes[1,3].set_xlabel('Time (sec)', color='white')
-    axes[1,3].set_ylabel('theta [m/s]', color='white')
+    axes[1,3].set_ylabel('theta [rad]', color='white')
     axes[1,3].grid(True)
     axes[1,3].set_facecolor('black')
     axes[1,3].tick_params(colors='white')

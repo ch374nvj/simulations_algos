@@ -77,6 +77,8 @@ class AHV_model:
         return Cy
 
     def Clm(self, alpha_deg, beta_deg, u_deg, TAS, p, r):
+        p *= 57.3
+        r *= 57.3
         Cl_beta = -0.14 + 3.32e-2 * self.M - 7.59e-4 * alpha_deg - 3.79e-3 * self.M ** 2
         Cl_del_e = -1.17e-4 * u_deg[0]
         Cl_del_a = 1.17e-4  * u_deg[1]
@@ -89,6 +91,7 @@ class AHV_model:
         return Clm
 
     def Cm(self, alpha_deg, u_deg, TAS, q):
+        q*= 57.3
         Cm_alpha = -2.19e-2 + 7.73e-3 * self.M - 2.26e-3 * alpha_deg
         Cm_del_e = 2.89e-4 * u_deg[0]
         Cm_del_a = 2.89e-4 * u_deg[1]
@@ -101,6 +104,8 @@ class AHV_model:
         return Cm
 
     def Cn(self, alpha_deg, beta_deg, u_deg, TAS, p, r):
+        p *= 57.3
+        r *= 57.3
         Cn_beta = 5.91e-2 * self.M - 1.48e-2 * self.M**2 + 1.27e-3 * self.M ** 3
         Cn_del_e = 0
         Cn_del_a = 0
